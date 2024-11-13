@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import {
   Table,
@@ -18,112 +20,89 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+type csvDataType = {
+  value: string;
+  publishedDate: string;
+  portal: string;
+  author: string;
+  headline: string;
+  urlLink: string;
+  sentiment: string;
+};
 
 const HeadlinesTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("All");
+  const [headlines, setHeadlines] = useState<csvDataType[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const headlines = [
-    {
-      id: 1,
-      portal: "Sabrangindia",
-      publishedDate: "2024-11-11",
-      author: "A Legal Researcher",
-      headline:
-        "Beyond insurance: addressing the needs of India's agricultural labour force",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-    {
-      id: 2,
-      portal: "Sabrangindia",
-      publishedDate: "2024-11-11",
-      author: "Sabrangindia",
-      headline:
-        "Maharashtra: Free speech has remained on the line of fire of the current regime, democracy on trial as state goes for election",
-      urlLink: "Read More",
-      sentiment: "Negative",
-    },
-    {
-      id: 3,
-      portal: "Sabrangindia",
-      publishedDate: "2024-11-11",
-      author: "Sabrangindia",
-      headline:
-        "Citizens and experts rally to save Mumbai's BEST buses from privatisation pitfalls",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-    {
-      id: 4,
-      portal: "Sabrangindia",
-      publishedDate: "2024-11-11",
-      author: "Sabrangindia",
-      headline:
-        "Faith v/s Environment: 17,600 trees felled in U.P. to pave way for proposed Kanwar Yatra route, fact-finding panel tells NGT",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-    {
-      id: 5,
-      portal: "Maktoobmedia",
-      publishedDate: "2024-11-11",
-      author: "Maktoob Staff",
-      headline:
-        "Manipur: 10 Kukis killed by security forces, Kuki groups call 24-hour shutdown",
-      urlLink: "Read More",
-      sentiment: "Negative",
-    },
-    {
-      id: 6,
-      portal: "Maktoobmedia",
-      publishedDate: "2024-11-11",
-      author: "Maktoob Staff",
-      headline:
-        "SC declines to entertain bail plea, directs HC to hear matter as Gulfisha Fatima completes 4 years, 7 months in jail",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-    {
-      id: 7,
-      portal: "Maktoobmedia",
-      publishedDate: "2024-11-11",
-      author: "Rida Fathima",
-      headline: "Who has a right to the city?",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-    {
-      id: 8,
-      portal: "Maktoobmedia",
-      publishedDate: "2024-11-11",
-      author: "Maktoob Staff",
-      headline:
-        "Baba Siddique killing: Main accused arrested from Uttar Pradesh",
-      urlLink: "Read More",
-      sentiment: "Negative",
-    },
-    {
-      id: 9,
-      portal: "Maktoobmedia",
-      publishedDate: "2024-11-11",
-      author: "Maktoob Staff",
-      headline:
-        "Many countries nervous about US after trump's return, India not one of them: S. Jaishankar",
-      urlLink: "Read More",
-      sentiment: "Negative",
-    },
-    {
-      id: 10,
-      portal: "The News Minute",
-      publishedDate: "2024-11-11",
-      author: "Pooja Prasanna",
-      headline:
-        "The complex legacy of Siddaramaiah: A political and ideological profile",
-      urlLink: "Read More",
-      sentiment: "Neutral",
-    },
-  ];
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const file = "/news_auto.csv";
+        const response = await fetch(file);
+        const csvText = await response.text();
+        const rows = csvText.split("\n").map((row) => {
+          const fields = [];
+          let field = "";
+          let inQuotes = false;
+
+          for (let i = 0; i < row.length; i++) {
+            if (row[i] === '"') {
+              inQuotes = !inQuotes;
+            } else if (row[i] === "," && !inQuotes) {
+              fields.push(field.trim());
+              field = "";
+            } else {
+              field += row[i];
+            }
+          }
+          fields.push(field.trim());
+          return fields;
+        });
+
+        const data = rows.slice(1); // Skip header row
+        console.log(data);
+
+        const today = "11-11-2024";
+
+        const todaysData = data
+          .filter((row) => row[1] === today)
+          .map((row) => ({
+            portal: row[0],
+            publishedDate: row[1],
+            author: row[2],
+            headline: row[3],
+            urlLink: row[4],
+            sentiment: row[5],
+            value: row[6],
+          }));
+
+        setHeadlines(todaysData);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch data");
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filters = ["All", "Neutral", "Negative", "Positive"];
 
@@ -132,20 +111,46 @@ const HeadlinesTable = () => {
       headline.headline.toLowerCase().includes(searchQuery.toLowerCase()) ||
       headline.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
       headline.portal.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSentiment = filter === "All" || headline.sentiment === filter;
+    const matchesSentiment =
+      filter === "All" ||
+      headline.sentiment.toLowerCase() === filter.toLowerCase();
     return matchesSearch && matchesSentiment;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredHeadlines.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedHeadlines = filteredHeadlines.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE
+  );
+
   const getSentimentColor = (sentiment: string) => {
-    switch (sentiment) {
-      case "Negative":
+    switch (sentiment.toLowerCase()) {
+      case "negative":
         return "destructive";
-      case "Positive":
+      case "positive":
         return "success";
       default:
         return "secondary";
     }
   };
+
+  if (loading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">Loading headlines...</CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6 text-red-500">{error}</CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -193,9 +198,11 @@ const HeadlinesTable = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredHeadlines.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{index + 1}</TableCell>
+              {paginatedHeadlines.map((item, index) => (
+                <TableRow key={`${item.headline}-${index}`}>
+                  <TableCell className="font-medium">
+                    {startIndex + index + 1}
+                  </TableCell>
                   <TableCell>{item.portal}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {item.publishedDate}
@@ -207,8 +214,13 @@ const HeadlinesTable = () => {
                     {item.headline}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <a href="#" className="text-primary hover:underline">
-                      {item.urlLink}
+                    <a
+                      href={item.urlLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Read More
                     </a>
                   </TableCell>
                   <TableCell>
@@ -229,6 +241,49 @@ const HeadlinesTable = () => {
             </TableBody>
           </Table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, i) => (
+                  <PaginationItem key={i + 1}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(i + 1)}
+                      isActive={currentPage === i + 1}
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

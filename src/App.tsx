@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -277,9 +277,10 @@ export default function Component() {
               </CardContent>
             </Card>
           </div>
-
           {/* Headlines Table */}
-          <HeadlinesTable />
+          <Suspense fallback={<div>Loading headlines...</div>}>
+            <HeadlinesTable />
+          </Suspense>
         </div>
       </main>
     </div>
