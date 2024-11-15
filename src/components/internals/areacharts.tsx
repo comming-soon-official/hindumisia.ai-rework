@@ -55,29 +55,44 @@ const TrendsChart = () => {
       text: "Sentiment Trends Over Time",
       left: "center",
       top: 0,
+      textStyle: {
+        color: "var(--foreground)",
+      },
     },
     tooltip: {
       trigger: "axis",
       axisPointer: {
         type: "cross",
         label: {
-          backgroundColor: "#6a7985",
+          backgroundColor: "#ffffff",
+          color: "var(--accent-foreground)",
         },
       },
+      backgroundColor: "var(--card)",
+      borderWidth: 1,
+      borderColor: "var(--border)",
+      padding: [10, 15],
+      textStyle: {
+        color: "var(--card-foreground)",
+      },
       formatter: function (params: any) {
-        let tooltip = params[0].axisValue + "<br/>";
+        let tooltip = `<div style="color: var(--card-foreground)">
+          ${params[0].axisValue}<br/>`;
         let total = 0;
         params.forEach((param: any) => {
           total += param.value;
           tooltip += `${param.marker} ${param.seriesName}: ${param.value}<br/>`;
         });
-        tooltip += `<br/>Total: ${total}`;
+        tooltip += `<br/>Total: ${total}</div>`;
         return tooltip;
       },
     },
     legend: {
       data: ["Negative", "Neutral", "Positive"],
       top: 25,
+      textStyle: {
+        color: "var(--foreground)",
+      },
     },
     grid: {
       left: "3%",
@@ -115,6 +130,32 @@ const TrendsChart = () => {
         xAxisIndex: [0],
         start: 0,
         end: 100,
+        backgroundColor: "var(--secondary)",
+        dataBackground: {
+          lineStyle: {
+            color: "var(--muted-foreground)",
+          },
+          areaStyle: {
+            color: "var(--muted)",
+          },
+        },
+        selectedDataBackground: {
+          lineStyle: {
+            color: "var(--primary)",
+          },
+          areaStyle: {
+            color: "var(--primary)",
+          },
+        },
+        fillerColor: "var(--accent)",
+        borderColor: "var(--border)",
+        textStyle: {
+          color: "var(--foreground)",
+        },
+        handleStyle: {
+          color: "var(--primary)",
+          borderColor: "var(--border)",
+        },
       },
       {
         type: "inside",
@@ -128,9 +169,15 @@ const TrendsChart = () => {
       boundaryGap: false,
       data: chartData.dates,
       axisLabel: {
+        color: "var(--foreground)",
         rotate: 45,
         formatter: (value: string) => {
           return new Date(value).toLocaleDateString();
+        },
+      },
+      axisLine: {
+        lineStyle: {
+          color: "var(--muted-foreground)",
         },
       },
     },
@@ -139,11 +186,17 @@ const TrendsChart = () => {
       splitLine: {
         show: true,
         lineStyle: {
-          type: "dashed",
+          color: "var(--border)",
         },
       },
       axisLabel: {
+        color: "var(--foreground)",
         formatter: "{value}",
+      },
+      axisLine: {
+        lineStyle: {
+          color: "var(--muted-foreground)",
+        },
       },
     },
     series: [
@@ -161,7 +214,7 @@ const TrendsChart = () => {
         },
         data: chartData.negative,
         itemStyle: {
-          color: "hsl(0, 100%, 50%)",
+          color: "hsl(0, 100%, 50%)", // Default red
         },
       },
       {
@@ -178,7 +231,7 @@ const TrendsChart = () => {
         },
         data: chartData.neutral,
         itemStyle: {
-          color: "hsl(0, 0%, 70%)",
+          color: "hsl(0, 0%, 70%)", // Default gray
         },
       },
       {
@@ -195,13 +248,14 @@ const TrendsChart = () => {
         },
         data: chartData.positive,
         itemStyle: {
-          color: "hsl(120, 100%, 35%)",
+          color: "hsl(120, 100%, 35%)", // Default green
         },
       },
     ],
     animation: true,
     animationDuration: 1000,
     animationEasing: "cubicInOut",
+    backgroundColor: "transparent",
   };
 
   return (

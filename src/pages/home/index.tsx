@@ -16,6 +16,7 @@ import { SentimentData, PortalData, PieData } from "@/types/sentiment";
 import HeadlinesTable from "@/components/internals/tables/table";
 import TrendsChart from "@/components/internals/areacharts";
 import useUniversalStore from "@/store/useUniversalStore";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function HomePage() {
   const [timeframe, setTimeframe] = useState("daily");
@@ -272,10 +273,11 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="border-b">
-        <div className="container flex h-16 items-center px-4">
+        <div className="container flex h-16 items-center justify-between px-4">
           <h1 className="text-2xl font-bold text-orange-500">
             MEDIA SENTIMENT SCORECARD
           </h1>
+          <ThemeToggle />
         </div>
       </header>
       <main className="flex-1 space-y-6 p-4 md:p-8">

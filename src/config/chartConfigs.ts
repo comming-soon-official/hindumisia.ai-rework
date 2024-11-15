@@ -13,20 +13,25 @@ export const getBarChartConfig = (
     zoom = true,
   } = {}
 ) => ({
-  backgroundColor: "#ffffff",
+  backgroundColor: "transparent",
+  textStyle: {
+    color: "var(--foreground)",
+  },
   tooltip: {
     trigger: "axis",
     axisPointer: {
       type: "shadow",
       shadowStyle: {
-        color: "rgba(0,0,0,0.1)",
+        color: "var(--accent)",
       },
     },
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: "var(--card)",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "var(--border)",
     padding: [10, 15],
-    textStyle: { color: "#333" },
+    textStyle: {
+      color: "var(--card-foreground)",
+    },
     extraCssText: "box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);",
   },
   legend: showLegend
@@ -34,7 +39,9 @@ export const getBarChartConfig = (
         data: ["Negative", "Neutral", "Positive"],
         orient: legendPosition === "top" ? "horizontal" : "vertical",
         [legendPosition]: "10%",
-        textStyle: { color: "#333" },
+        textStyle: {
+          color: "var(--foreground)",
+        },
         selectedMode: true,
         selector: [
           { type: "all", title: "All" },
@@ -118,12 +125,14 @@ export const getBarChartConfig = (
       },
     },
     axisLabel: {
-      color: "#666",
+      color: "var(--foreground)",
       fontSize: 12,
     },
     axisLine: {
       show: true,
-      lineStyle: { color: "#999" },
+      lineStyle: {
+        color: "var(--muted-foreground)",
+      },
     },
   },
   [orientation === "horizontal" ? "yAxis" : "xAxis"]: {
@@ -132,13 +141,17 @@ export const getBarChartConfig = (
     axisLabel: {
       interval: 0,
       rotate: orientation === "horizontal" ? 0 : 30,
-      color: "#666",
+      color: "var(--foreground)",
       fontSize: 12,
     },
     axisLine: {
       lineStyle: {
-        color: "#999",
-        width: 2,
+        color: "var(--muted-foreground)",
+      },
+    },
+    splitLine: {
+      lineStyle: {
+        color: "var(--border)",
       },
     },
   },
@@ -244,20 +257,27 @@ export const getPieChartConfig = (
     colors = ["hsl(0, 100%, 50%)", "hsl(0, 0%, 70%)", "hsl(120, 100%, 35%)"],
   } = {}
 ) => ({
-  backgroundColor: "#ffffff",
+  backgroundColor: "transparent",
+  textStyle: {
+    color: "var(--foreground)",
+  },
   tooltip: {
     trigger: "item",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: "var(--card)",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "var(--border)",
     padding: [10, 15],
-    textStyle: { color: "#333" },
+    textStyle: {
+      color: "var(--card-foreground)",
+    },
     extraCssText: "box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);",
     formatter: (params: any) => {
-      return `${params.name}<br/>
-              <span style="color:${params.color}">●</span> 
-              Value: ${params.value}<br/>
-              Percentage: ${params.percent}%`;
+      return `<div style="color: var(--card-foreground)">
+        ${params.name}<br/>
+        <span style="color:${params.color}">●</span> 
+        Value: ${params.value}<br/>
+        Percentage: ${params.percent}%
+      </div>`;
     },
   },
   legend: showLegend
@@ -271,7 +291,9 @@ export const getPieChartConfig = (
           legendPosition === "left" || legendPosition === "right"
             ? "10%"
             : "center",
-        textStyle: { color: "#333" },
+        textStyle: {
+          color: "var(--foreground)",
+        },
         selectedMode: true,
         selector: [
           { type: "all", title: "All" },
