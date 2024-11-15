@@ -19,8 +19,7 @@ type csvDataType = {
   MonthlyDate: Date | null;
   rangeFromDate: Date | null;
   rangeToDate: Date | null;
-  csvDataMap: Map<string, csvDataObjectType>;
-  csvDataFor2Days: Map<string, csvDataObjectType>;
+  csvData: csvDataObjectType[];
   write: (
     obj: Partial<csvDataType> | ((obj: csvDataType) => csvDataType)
   ) => void;
@@ -36,8 +35,7 @@ const useUniversalStore = create<csvDataType>((set) => {
     MonthlyDate: null,
     rangeFromDate: null,
     rangeToDate: null,
-    csvDataFor2Days: new Map<string, csvDataObjectType>(),
-    csvDataMap: new Map<string, csvDataObjectType>(),
+    csvData: [],
     write: (obj) => {
       if (typeof obj === "function") {
         set((state) => obj(state));

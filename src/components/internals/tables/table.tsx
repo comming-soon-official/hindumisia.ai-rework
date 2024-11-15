@@ -29,102 +29,33 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import useUniversalStore, {
-  csvDataObjectType,
-} from "@/store/useUniversalStore";
+import { csvDataObjectType } from "@/store/useUniversalStore";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 const TODAY = new Date("11-11-2024");
 const filters = ["All", "Neutral", "Negative", "Positive"];
 
-const HeadlinesTable = () => {
+interface HeadlinesTableProps {
+  rangeData: csvDataObjectType[];
+  selectedPortal: string;
+  onPortalChange: (portal: string) => void;
+  availablePortals: string[];
+}
+
+const HeadlinesTable = ({
+  rangeData,
+  selectedPortal,
+  onPortalChange,
+  availablePortals,
+}: HeadlinesTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [goToPage, setGoToPage] = useState("");
-  const { write, csvDataMap } = useUniversalStore();
-
-  const fetchData = useCallback(async () => {
-    if (csvDataMap.size > 0) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const file = "/news_auto.csv";
-      const response = await fetch(file);
-      const csvText = await response.text();
-      const rows = csvText.split("\n").map((row) => {
-        const fields = [];
-        let field = "";
-        let inQuotes = false;
-
-        for (let i = 0; i < row.length; i++) {
-          if (row[i] === '"') {
-            inQuotes = !inQuotes;
-          } else if (row[i] === "," && !inQuotes) {
-            fields.push(field.trim());
-            field = "";
-          } else {
-            field += row[i];
-          }
-        }
-        fields.push(field.trim());
-        return fields;
-      });
-
-      const data = rows.slice(1); // Skip header row
-      const allDataMap = new Map<string, csvDataObjectType>();
-
-      data.forEach((row, index) => {
-        const headlineData = {
-          portal: row[0],
-          publishedDate: row[1],
-          author: row[2],
-          headline: row[3],
-          urlLink: row[4],
-          sentiment: row[5],
-          value: row[6],
-        };
-        const key = `${row[3]}-${index}`;
-        allDataMap.set(key, headlineData);
-      });
-
-      write({ csvDataMap: allDataMap });
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to fetch data");
-      setLoading(false);
-    }
-  }, [write, csvDataMap.size]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const todaysHeadlines = useMemo(() => {
-    const headlines: csvDataObjectType[] = [];
-    csvDataMap.forEach((data) => {
-      const publishedDate = new Date(data.publishedDate);
-      const yesterday = new Date(TODAY);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (
-        publishedDate.toDateString() === TODAY.toDateString() ||
-        publishedDate.toDateString() === yesterday.toDateString()
-      ) {
-        headlines.push(data);
-      }
-    });
-    return headlines;
-  }, [csvDataMap]);
 
   const filteredHeadlines = useMemo(() => {
-    return todaysHeadlines.filter((headline) => {
+    return rangeData.filter((headline) => {
       const matchesSearch =
         headline.headline.toLowerCase().includes(searchQuery.toLowerCase()) ||
         headline.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,7 +66,7 @@ const HeadlinesTable = () => {
 
       return matchesSearch && matchesSentiment;
     });
-  }, [todaysHeadlines, searchQuery, filter]);
+  }, [rangeData, searchQuery, filter]);
 
   const totalPages = Math.ceil(filteredHeadlines.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -198,28 +129,10 @@ const HeadlinesTable = () => {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="p-6">Loading headlines...</CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full">
-        <CardContent className="p-6 text-red-500">{error}</CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">
-          Headlines for 11-Nov-2024
-        </CardTitle>
+        <CardTitle className="text-2xl font-bold">Headlines</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
@@ -240,6 +153,19 @@ const HeadlinesTable = () => {
               {filters.map((f) => (
                 <SelectItem key={f} value={f}>
                   {f}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedPortal} onValueChange={onPortalChange}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="Filter by portal" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Portals</SelectItem>
+              {availablePortals.map((portal) => (
+                <SelectItem key={portal} value={portal}>
+                  {portal}
                 </SelectItem>
               ))}
             </SelectContent>

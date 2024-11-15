@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,12 +15,34 @@ import { getBarChartConfig, getPieChartConfig } from "@/config/chartConfigs";
 import { SentimentData, PortalData, PieData } from "@/types/sentiment";
 import HeadlinesTable from "@/components/internals/tables/table";
 import TrendsChart from "@/components/internals/areacharts";
+import useUniversalStore from "@/store/useUniversalStore";
 
 export default function HomePage() {
   const [timeframe, setTimeframe] = useState("daily");
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    if (timeframe === "daily") {
+      return today;
+    } else if (timeframe === "monthly") {
+      return new Date(today.getFullYear(), today.getMonth(), 1);
+    }
+    return today;
+  });
+
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    if (timeframe === "daily") {
+      return today;
+    } else if (timeframe === "monthly") {
+      return new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+    return today;
+  });
+
   const [selectedPortal, setSelectedPortal] = useState("all");
+  const { write, csvData } = useUniversalStore();
+  const [publishedDate, setPublishedDate] = useState<Date>();
+
   const [chartTheme, setChartTheme] = useState({
     barOrientation: "horizontal",
     showLegends: true,
@@ -28,53 +50,224 @@ export default function HomePage() {
     colors: ["hsl(0, 100%, 50%)", "hsl(0, 0%, 70%)", "hsl(120, 100%, 35%)"],
   });
 
-  // Mock data (you might want to move this to a separate file later)
-  const sentimentData: SentimentData = {
-    total: 143,
-    negative: 54,
-    neutral: 82,
-    positive: 7,
-    change: {
-      total: 17,
-      negative: -8,
-      neutral: 15,
-      positive: 0,
-    },
-  };
+  useEffect(() => {
+    const today = new Date();
 
-  const portalData: PortalData[] = [
-    { name: "Telegraph India", negative: 23, neutral: 41, positive: 5 },
-    { name: "The Print", negative: 14, neutral: 20, positive: 1 },
-    { name: "The Week", negative: 12, neutral: 3, positive: 0 },
-    { name: "Maktoobmedia", negative: 3, neutral: 2, positive: 0 },
-    { name: "Sabrangindia", negative: 1, neutral: 3, positive: 0 },
-    { name: "News Laundry", negative: 1, neutral: 3, positive: 0 },
-  ];
-
-  const toneDistributionData: PortalData[] = [
-    { name: "National Herald", negative: 100.0, neutral: 0, positive: 0 },
-    { name: "Maktoobmedia", negative: 60.0, neutral: 40.0, positive: 0 },
-    { name: "The News Minute", negative: 50.0, neutral: 50.0, positive: 0 },
-    { name: "Telegraph India", negative: 47.8, neutral: 49.3, positive: 2.9 },
-    { name: "The Print", negative: 32.3, neutral: 61.3, positive: 6.4 },
-    { name: "Sabrangindia", negative: 25.0, neutral: 75.0, positive: 0 },
-    { name: "The Week", negative: 21.7, neutral: 69.6, positive: 8.7 },
-    { name: "News Laundry", negative: 16.7, neutral: 83.3, positive: 0 },
-  ];
-  const pieData: PieData[] = [
-    { name: "Negative", value: 37.8 },
-    { name: "Neutral", value: 57.3 },
-    { name: "Positive", value: 4.9 },
-  ];
-
-  // Update the date range selection logic
-  const handleStartDateChange = (newDate: Date) => {
-    setStartDate(newDate);
-    // If end date is before new start date, update it
-    if (endDate < newDate) {
-      setEndDate(newDate);
+    if (timeframe === "daily") {
+      setStartDate(today);
+      setEndDate(today);
+    } else if (timeframe === "monthly") {
+      setStartDate(new Date(today.getFullYear(), today.getMonth(), 1));
+      setEndDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
     }
-  };
+    // For "range", we don't auto-update dates to let user pick their own range
+  }, [timeframe]);
+
+  useEffect(() => {
+    write({ rangeFromDate: startDate, rangeToDate: endDate });
+  }, [startDate, endDate, write]);
+
+  const rangeData = useMemo(() => {
+    return csvData.filter((data) => {
+      const publishedDate = new Date(data.publishedDate);
+      // Subtract 1 day from publishedDate
+      publishedDate.setDate(publishedDate.getDate() - 1);
+      // Set time to midnight for consistent date comparison
+      publishedDate.setHours(0, 0, 0, 0);
+      setPublishedDate(publishedDate);
+
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      return publishedDate >= start && publishedDate <= end;
+    });
+  }, [csvData, startDate, endDate]);
+
+  // Get unique portals from rangeData
+  const availablePortals = useMemo(() => {
+    const portals = new Set(rangeData.map((item) => item.portal));
+    return Array.from(portals).sort();
+  }, [rangeData]);
+
+  // Filter rangeData based on selected portal
+  const filteredRangeData = useMemo(() => {
+    if (selectedPortal === "all") return rangeData;
+    return rangeData.filter((item) => item.portal === selectedPortal);
+  }, [rangeData, selectedPortal]);
+
+  // Calculate portal data from rangeData
+  const portalData: PortalData[] = useMemo(() => {
+    const portalMap = new Map<
+      string,
+      { negative: number; neutral: number; positive: number }
+    >();
+
+    filteredRangeData.forEach((item) => {
+      const current = portalMap.get(item.portal) || {
+        negative: 0,
+        neutral: 0,
+        positive: 0,
+      };
+
+      switch (item.sentiment.toLowerCase()) {
+        case "negative":
+          current.negative++;
+          break;
+        case "neutral":
+          current.neutral++;
+          break;
+        case "positive":
+          current.positive++;
+          break;
+      }
+
+      portalMap.set(item.portal, current);
+    });
+
+    return Array.from(portalMap.entries())
+      .map(([name, counts]) => ({
+        name,
+        ...counts,
+      }))
+      .sort(
+        (a, b) =>
+          b.negative +
+          b.neutral +
+          b.positive -
+          (a.negative + a.neutral + a.positive)
+      );
+  }, [filteredRangeData]);
+
+  // Calculate tone distribution data from rangeData
+  const toneDistributionData: PortalData[] = useMemo(() => {
+    const portalMap = new Map<
+      string,
+      { negative: number; neutral: number; positive: number }
+    >();
+
+    filteredRangeData.forEach((item) => {
+      const current = portalMap.get(item.portal) || {
+        negative: 0,
+        neutral: 0,
+        positive: 0,
+      };
+
+      switch (item.sentiment.toLowerCase()) {
+        case "negative":
+          current.negative++;
+          break;
+        case "neutral":
+          current.neutral++;
+          break;
+        case "positive":
+          current.positive++;
+          break;
+      }
+
+      portalMap.set(item.portal, current);
+    });
+
+    return Array.from(portalMap.entries())
+      .map(([name, counts]) => {
+        const total = counts.negative + counts.neutral + counts.positive;
+        return {
+          name,
+          negative: Number(((counts.negative / total) * 100).toFixed(1)),
+          neutral: Number(((counts.neutral / total) * 100).toFixed(1)),
+          positive: Number(((counts.positive / total) * 100).toFixed(1)),
+        };
+      })
+      .sort((a, b) => b.negative - a.negative);
+  }, [filteredRangeData]);
+
+  // Calculate pie chart data from rangeData
+  const pieData: PieData[] = useMemo(() => {
+    const totals = filteredRangeData.reduce(
+      (acc, item) => {
+        switch (item.sentiment.toLowerCase()) {
+          case "negative":
+            acc.negative++;
+            break;
+          case "neutral":
+            acc.neutral++;
+            break;
+          case "positive":
+            acc.positive++;
+            break;
+        }
+        return acc;
+      },
+      { negative: 0, neutral: 0, positive: 0 }
+    );
+
+    const total = totals.negative + totals.neutral + totals.positive;
+
+    return [
+      { name: "Negative", value: (totals.negative / total) * 100 },
+      { name: "Neutral", value: (totals.neutral / total) * 100 },
+      { name: "Positive", value: (totals.positive / total) * 100 },
+    ];
+  }, [filteredRangeData]);
+
+  // Calculate current and previous day data
+  const { currentData, previousDayData } = useMemo(() => {
+    const current = filteredRangeData.reduce(
+      (acc, item) => {
+        switch (item.sentiment.toLowerCase()) {
+          case "negative":
+            acc.negative++;
+            break;
+          case "neutral":
+            acc.neutral++;
+            break;
+          case "positive":
+            acc.positive++;
+            break;
+        }
+        return acc;
+      },
+      { negative: 0, neutral: 0, positive: 0 }
+    );
+
+    let previous = null;
+
+    if (timeframe === "daily") {
+      // Calculate previous day's data
+      const currentDate = new Date(startDate);
+      const previousDate = new Date(currentDate);
+      previousDate.setDate(previousDate.getDate() - 1);
+
+      previous = csvData.reduce(
+        (acc, item) => {
+          const itemDate = new Date(item.publishedDate);
+          // Compare only dates, not times
+          if (
+            itemDate.getFullYear() === previousDate.getFullYear() &&
+            itemDate.getMonth() === previousDate.getMonth() &&
+            itemDate.getDate() === previousDate.getDate()
+          ) {
+            switch (item.sentiment.toLowerCase()) {
+              case "negative":
+                acc.negative++;
+                break;
+              case "neutral":
+                acc.neutral++;
+                break;
+              case "positive":
+                acc.positive++;
+                break;
+            }
+          }
+          return acc;
+        },
+        { negative: 0, neutral: 0, positive: 0 }
+      );
+    }
+
+    return { currentData: current, previousDayData: previous };
+  }, [filteredRangeData, csvData, timeframe, startDate]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -115,14 +308,14 @@ export default function HomePage() {
                     <DateSelector
                       label="Start Date"
                       date={startDate}
-                      setDate={handleStartDateChange}
-                      maxDate={new Date()} // Today is the maximum date
+                      setDate={setStartDate}
+                      maxDate={endDate} // End date is the maximum date
                     />
                     <DateSelector
                       label="End Date"
                       date={endDate}
                       setDate={setEndDate}
-                      minDate={startDate} // Start date is the minimum date for end date
+                      minDate={startDate} // Start date is the minimum date
                       maxDate={new Date()} // Today is the maximum date
                     />
                   </div>
@@ -147,12 +340,11 @@ export default function HomePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Portals</SelectItem>
-                    <SelectItem value="telegraph">Telegraph India</SelectItem>
-                    <SelectItem value="print">The Print</SelectItem>
-                    <SelectItem value="week">The Week</SelectItem>
-                    <SelectItem value="maktoob">Maktoobmedia</SelectItem>
-                    <SelectItem value="sabrang">Sabrangindia</SelectItem>
-                    <SelectItem value="newslaundry">News Laundry</SelectItem>
+                    {availablePortals.map((portal) => (
+                      <SelectItem key={portal} value={portal}>
+                        {portal}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </CardContent>
@@ -163,29 +355,43 @@ export default function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatisticCard
               title="Total Articles"
-              value={sentimentData.total}
-              change={sentimentData.change.total}
+              value={
+                currentData.negative +
+                currentData.neutral +
+                currentData.positive
+              }
+              previousDayValue={
+                previousDayData
+                  ? previousDayData.negative +
+                    previousDayData.neutral +
+                    previousDayData.positive
+                  : null
+              }
+              timeframe={timeframe}
             />
             <StatisticCard
               title="Negative"
-              value={sentimentData.negative}
-              change={sentimentData.change.negative}
+              value={currentData.negative}
+              previousDayValue={previousDayData?.negative ?? null}
               color="text-red-500"
               bgColor="bg-red-500/10"
+              timeframe={timeframe}
             />
             <StatisticCard
               title="Neutral"
-              value={sentimentData.neutral}
-              change={sentimentData.change.neutral}
+              value={currentData.neutral}
+              previousDayValue={previousDayData?.neutral ?? null}
               color="text-gray-500"
               bgColor="bg-gray-500/10"
+              timeframe={timeframe}
             />
             <StatisticCard
               title="Positive"
-              value={sentimentData.positive}
-              change={sentimentData.change.positive}
+              value={currentData.positive}
+              previousDayValue={previousDayData?.positive ?? null}
               color="text-green-500"
               bgColor="bg-green-500/10"
+              timeframe={timeframe}
             />
           </div>
 
@@ -279,7 +485,12 @@ export default function HomePage() {
           </div>
           {/* Headlines Table */}
           <Suspense fallback={<div>Loading headlines...</div>}>
-            <HeadlinesTable />
+            <HeadlinesTable
+              rangeData={filteredRangeData}
+              selectedPortal={selectedPortal}
+              onPortalChange={setSelectedPortal}
+              availablePortals={availablePortals}
+            />
           </Suspense>
         </div>
       </main>

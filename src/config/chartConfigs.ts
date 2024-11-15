@@ -266,7 +266,7 @@ export const getPieChartConfig = (
           legendPosition === "top" || legendPosition === "bottom"
             ? "horizontal"
             : "vertical",
-        [legendPosition]: legendPosition === "top" ? "5%" : "10%",
+        [legendPosition]: legendPosition === "top" ? "0%" : "0%",
         left:
           legendPosition === "left" || legendPosition === "right"
             ? "10%"
