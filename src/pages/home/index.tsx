@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { StatisticCard } from "@/components/dashboard/StatisticCard";
 import { DateSelector } from "@/components/dashboard/DateSelector";
 import { getBarChartConfig, getPieChartConfig } from "@/config/chartConfigs";
-import { SentimentData, PortalData, PieData } from "@/types/sentiment";
+import { PortalData, PieData } from "@/types/sentiment";
 import HeadlinesTable from "@/components/internals/tables/table";
 import TrendsChart from "@/components/internals/areacharts";
 import useUniversalStore from "@/store/useUniversalStore";
@@ -42,14 +42,13 @@ export default function HomePage() {
 
   const [selectedPortal, setSelectedPortal] = useState("all");
   const { write, csvData } = useUniversalStore();
-  const [publishedDate, setPublishedDate] = useState<Date>();
 
-  const [chartTheme, setChartTheme] = useState({
+  const chartTheme = {
     barOrientation: "horizontal",
     showLegends: true,
     legendPosition: "top",
     colors: ["hsl(0, 100%, 50%)", "hsl(0, 0%, 70%)", "hsl(120, 100%, 35%)"],
-  });
+  };
 
   useEffect(() => {
     const today = new Date();
@@ -75,7 +74,6 @@ export default function HomePage() {
       publishedDate.setDate(publishedDate.getDate() - 1);
       // Set time to midnight for consistent date comparison
       publishedDate.setHours(0, 0, 0, 0);
-      setPublishedDate(publishedDate);
 
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);

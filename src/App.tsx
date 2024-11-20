@@ -1,4 +1,3 @@
-import React from "react";
 import HomePage from "./pages/home";
 import { DataInit } from "./store/init";
 import { ThemeProvider } from "./components/theme/ThemeProvider";

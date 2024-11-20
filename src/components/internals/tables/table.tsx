@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Search } from "lucide-react";
 import {
   Table,
@@ -32,7 +32,6 @@ import {
 import { csvDataObjectType } from "@/store/useUniversalStore";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
-const TODAY = new Date("11-11-2024");
 const filters = ["All", "Neutral", "Negative", "Positive"];
 
 interface HeadlinesTableProps {

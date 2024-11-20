@@ -369,7 +369,7 @@ export const getPieChartConfig = (
       color: colors,
       animationType: "scale",
       animationEasing: "elasticOut",
-      animationDelay: function (idx: number) {
+      animationDelay: function () {
         return Math.random() * 200;
       },
     },
