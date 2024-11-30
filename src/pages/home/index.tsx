@@ -1,3 +1,6 @@
+//TODO:Error handling on no datas pending
+//TODO : Fix monthly data handling rangeData currently shows random datas in monthly basis
+
 import { Suspense, useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +17,10 @@ import { DateSelector } from "@/components/dashboard/DateSelector";
 import { getBarChartConfig, getPieChartConfig } from "@/config/chartConfigs";
 import { PortalData, PieData } from "@/types/sentiment";
 import HeadlinesTable from "@/components/internals/tables/table";
-import TrendsChart from "@/components/internals/areacharts";
+import TrendsChart from "@/components/internals/charts/areacharts";
 import useUniversalStore from "@/store/useUniversalStore";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { MonthlyPicker } from "@/components/internals/monthlypicker";
 
 export default function HomePage() {
   const [timeframe, setTimeframe] = useState("daily");
@@ -33,6 +37,8 @@ export default function HomePage() {
   const [endDate, setEndDate] = useState(() => {
     const today = new Date();
     if (timeframe === "daily") {
+      console.log(today);
+
       return today;
     } else if (timeframe === "monthly") {
       return new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -49,7 +55,6 @@ export default function HomePage() {
     legendPosition: "top",
     colors: ["hsl(0, 100%, 50%)", "hsl(0, 0%, 70%)", "hsl(120, 100%, 35%)"],
   };
-
   useEffect(() => {
     const today = new Date();
 
@@ -68,7 +73,7 @@ export default function HomePage() {
   }, [startDate, endDate, write]);
 
   const rangeData = useMemo(() => {
-    return csvData.filter((data) => {
+    const data = csvData.filter((data) => {
       const publishedDate = new Date(data.publishedDate);
       // Subtract 1 day from publishedDate
       publishedDate.setDate(publishedDate.getDate() - 1);
@@ -82,6 +87,10 @@ export default function HomePage() {
 
       return publishedDate >= start && publishedDate <= end;
     });
+    console.log(startDate, endDate);
+    console.log(data);
+
+    return data;
   }, [csvData, startDate, endDate]);
 
   // Get unique portals from rangeData
@@ -302,7 +311,26 @@ export default function HomePage() {
                     </Button>
                   ))}
                 </div>
-
+                {timeframe === "monthly" && (
+                  <MonthlyPicker
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    setEndDate={setEndDate}
+                  />
+                )}
+                {timeframe === "daily" && (
+                  <DateSelector
+                    label="Start Date"
+                    date={startDate}
+                    setDate={(e) => {
+                      setStartDate(e);
+                      const inputDate = new Date(e);
+                      inputDate.setDate(inputDate.getDate() + 1);
+                      setEndDate(inputDate);
+                    }}
+                    maxDate={new Date()} // End date is the maximum date
+                  />
+                )}
                 {timeframe === "range" && (
                   <div className="flex flex-wrap gap-4">
                     <DateSelector
@@ -413,6 +441,7 @@ export default function HomePage() {
                       colors: chartTheme.colors,
                       zoom: true,
                       barWidth: 20,
+                      isDivergent: false,
                     })}
                     notMerge={true}
                     lazyUpdate={true}
@@ -463,6 +492,7 @@ export default function HomePage() {
                       colors: chartTheme.colors,
                       zoom: true,
                       barWidth: 25,
+                      isDivergent: true,
                     })}
                     notMerge={true}
                     lazyUpdate={true}
