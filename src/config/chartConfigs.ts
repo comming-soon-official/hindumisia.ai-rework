@@ -11,6 +11,7 @@ export const getBarChartConfig = (
     colors = ["hsl(0, 100%, 50%)", "hsl(0, 0%, 70%)", "hsl(120, 100%, 35%)"],
     orientation = "horizontal",
     zoom = true,
+    isDivergent = false,
   } = {}
 ) => ({
   backgroundColor: "transparent",
@@ -127,6 +128,9 @@ export const getBarChartConfig = (
     axisLabel: {
       color: "var(--foreground)",
       fontSize: 12,
+      formatter: isDivergent
+        ? (value: number) => `${Math.abs(value)}%`
+        : undefined,
     },
     axisLine: {
       show: true,
@@ -134,6 +138,7 @@ export const getBarChartConfig = (
         color: "var(--muted-foreground)",
       },
     },
+    ...(isDivergent ? { max: 100, min: -100 } : {}),
   },
   [orientation === "horizontal" ? "yAxis" : "xAxis"]: {
     type: "category",
@@ -155,94 +160,176 @@ export const getBarChartConfig = (
       },
     },
   },
-  series: [
-    {
-      name: "Negative",
-      type: "bar",
-      stack: "total",
-      barWidth: barWidth,
-      barGap: barGap,
-      label: {
-        show: true,
-        position: labelPosition,
-        fontSize: 12,
-        color: "#fff",
-        textBorderColor: "#000",
-        textBorderWidth: 2,
-      },
-      emphasis: {
-        focus: "series",
-        itemStyle: {
-          shadowBlur: 10,
-          shadowColor: "rgba(0,0,0,0.3)",
+  series: isDivergent
+    ? [
+        {
+          name: "Negative",
+          type: "bar",
+          stack: "left",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "insideLeft",
+            fontSize: 12,
+            formatter: (params: any) => `${Math.abs(params.value)}%`,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+            distance: 10,
+          },
+          emphasis: {
+            focus: "series",
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: "rgba(0,0,0,0.3)",
+            },
+          },
+          data: portalData.map((item) => -item.negative),
+          itemStyle: {
+            color: colors[0],
+            borderRadius: [5, 0, 0, 5],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
         },
-      },
-      data: portalData.map((item) => item.negative),
-      itemStyle: {
-        color: colors[0],
-        borderRadius: [5, 5, 0, 0],
-        borderColor: "#fff",
-        borderWidth: 1,
-      },
-    },
-    {
-      name: "Neutral",
-      type: "bar",
-      stack: "total",
-      barWidth: barWidth,
-      barGap: barGap,
-      label: {
-        show: true,
-        position: labelPosition,
-        fontSize: 12,
-        color: "#fff",
-        textBorderColor: "#000",
-        textBorderWidth: 2,
-      },
-      emphasis: {
-        focus: "series",
-        itemStyle: {
-          shadowBlur: 10,
-          shadowColor: "rgba(0,0,0,0.3)",
+        {
+          name: "Neutral",
+          type: "bar",
+          stack: "right",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "inside",
+            fontSize: 12,
+            formatter: (params: any) => `${params.value}%`,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+          },
+          emphasis: {
+            focus: "series",
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: "rgba(0,0,0,0.3)",
+            },
+          },
+          data: portalData.map((item) => item.neutral),
+          itemStyle: {
+            color: colors[1],
+            borderRadius: [0, 0, 0, 0],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
         },
-      },
-      data: portalData.map((item) => item.neutral),
-      itemStyle: {
-        color: colors[1],
-        borderColor: "#fff",
-        borderWidth: 1,
-      },
-    },
-    {
-      name: "Positive",
-      type: "bar",
-      stack: "total",
-      barWidth: barWidth,
-      barGap: barGap,
-      label: {
-        show: true,
-        position: labelPosition,
-        fontSize: 12,
-        color: "#fff",
-        textBorderColor: "#000",
-        textBorderWidth: 2,
-      },
-      emphasis: {
-        focus: "series",
-        itemStyle: {
-          shadowBlur: 10,
-          shadowColor: "rgba(0,0,0,0.3)",
+        {
+          name: "Positive",
+          type: "bar",
+          stack: "right",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "inside",
+            fontSize: 12,
+            formatter: (params: any) => `${params.value}%`,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+          },
+          emphasis: {
+            focus: "series",
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: "rgba(0,0,0,0.3)",
+            },
+          },
+          data: portalData.map((item) => item.positive),
+          itemStyle: {
+            color: colors[2],
+            borderRadius: [0, 5, 5, 0],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
         },
-      },
-      data: portalData.map((item) => item.positive),
-      itemStyle: {
-        color: colors[2],
-        borderRadius: [0, 0, 5, 5],
-        borderColor: "#fff",
-        borderWidth: 1,
-      },
-    },
-  ],
+      ]
+    : [
+        {
+          name: "Negative",
+          type: "bar",
+          stack: "total",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "inside",
+            fontSize: 12,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+          },
+          emphasis: {
+            focus: "series",
+          },
+          data: portalData.map((item) => item.negative),
+          itemStyle: {
+            color: colors[0],
+            borderRadius: [5, 5, 0, 0],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
+        },
+        {
+          name: "Neutral",
+          type: "bar",
+          stack: "total",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "inside",
+            fontSize: 12,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+          },
+          emphasis: {
+            focus: "series",
+          },
+          data: portalData.map((item) => item.neutral),
+          itemStyle: {
+            color: colors[1],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
+        },
+        {
+          name: "Positive",
+          type: "bar",
+          stack: "total",
+          barWidth: barWidth,
+          barGap: barGap,
+          label: {
+            show: true,
+            position: "inside",
+            fontSize: 12,
+            color: "#fff",
+            textBorderColor: "#000",
+            textBorderWidth: 2,
+          },
+          emphasis: {
+            focus: "series",
+          },
+          data: portalData.map((item) => item.positive),
+          itemStyle: {
+            color: colors[2],
+            borderRadius: [0, 0, 5, 5],
+            borderColor: "#fff",
+            borderWidth: 1,
+          },
+        },
+      ],
 });
 
 export const getPieChartConfig = (
