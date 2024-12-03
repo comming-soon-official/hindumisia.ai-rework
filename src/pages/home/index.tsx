@@ -74,7 +74,20 @@ export default function HomePage() {
 
   const rangeData = useMemo(() => {
     const data = csvData.filter((data) => {
-      const publishedDate = new Date(data.publishedDate);
+      // Parse date in DD-MM-YYYY format
+      if (!data.publishedDate) {
+        console.warn("Missing publishedDate");
+        return false;
+      }
+      const [day, month, year] = data.publishedDate.split("-").map(Number);
+      const publishedDate = new Date(year, month - 1, day); // month is 0-indexed
+
+      // Check if date is valid
+      if (isNaN(publishedDate.getTime())) {
+        console.warn(`Invalid date found: ${data.publishedDate}`);
+        return false;
+      }
+
       // Subtract 1 day from publishedDate
       publishedDate.setDate(publishedDate.getDate() - 1);
       // Set time to midnight for consistent date comparison
@@ -87,7 +100,6 @@ export default function HomePage() {
 
       return publishedDate >= start && publishedDate <= end;
     });
-    console.log(startDate, endDate);
     console.log(data);
 
     return data;
