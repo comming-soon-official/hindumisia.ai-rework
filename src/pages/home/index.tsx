@@ -20,6 +20,9 @@ import TrendsChart from '@/components/internals/charts/areacharts'
 import useUniversalStore from '@/store/useUniversalStore'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { MonthlyPicker } from '@/components/internals/monthlypicker'
+import Footer from '@/components/internals/footer'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 export default function HomePage() {
     const [timeframe, setTimeframe] = useState('daily')
@@ -296,7 +299,7 @@ export default function HomePage() {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <header className="border-b">
+            <header className="border-b bg-black">
                 <div className="container flex h-16 items-center justify-between px-4">
                     <div className="flex items-center justify-center">
                         <img
@@ -345,15 +348,20 @@ export default function HomePage() {
                                     )}
                                 </div>
                                 {timeframe === 'monthly' && (
-                                    <MonthlyPicker
-                                        startDate={startDate}
-                                        setStartDate={setStartDate}
-                                        setEndDate={setEndDate}
-                                    />
+                                    <div>
+                                        <div className="text-sm font-medium mb-2">
+                                            Select Month
+                                        </div>
+                                        <MonthlyPicker
+                                            startDate={startDate}
+                                            setStartDate={setStartDate}
+                                            setEndDate={setEndDate}
+                                        />
+                                    </div>
                                 )}
                                 {timeframe === 'daily' && (
                                     <DateSelector
-                                        label="Start Date"
+                                        label="Select Date"
                                         date={startDate}
                                         setDate={(e) => {
                                             setStartDate(e)
@@ -419,165 +427,196 @@ export default function HomePage() {
                         </Card>
                     </div>
 
-                    {/* Statistics Cards */}
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <StatisticCard
-                            title="Total Articles"
-                            value={
-                                currentData.negative +
-                                currentData.neutral +
-                                currentData.positive
-                            }
-                            previousDayValue={
-                                previousDayData
-                                    ? previousDayData.negative +
-                                      previousDayData.neutral +
-                                      previousDayData.positive
-                                    : null
-                            }
-                            timeframe={timeframe}
-                        />
-                        <StatisticCard
-                            title="Negative"
-                            value={currentData.negative}
-                            previousDayValue={previousDayData?.negative ?? null}
-                            color="text-red-500"
-                            bgColor="bg-red-500/10"
-                            timeframe={timeframe}
-                        />
-                        <StatisticCard
-                            title="Neutral"
-                            value={currentData.neutral}
-                            previousDayValue={previousDayData?.neutral ?? null}
-                            color="text-gray-500"
-                            bgColor="bg-gray-500/10"
-                            timeframe={timeframe}
-                        />
-                        <StatisticCard
-                            title="Positive"
-                            value={currentData.positive}
-                            previousDayValue={previousDayData?.positive ?? null}
-                            color="text-green-500"
-                            bgColor="bg-green-500/10"
-                            timeframe={timeframe}
-                        />
-                    </div>
+                    {rangeData.length != 0 ? (
+                        <div>
+                            {/* Statistics Cards */}
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                <StatisticCard
+                                    title="Total Articles"
+                                    value={
+                                        currentData.negative +
+                                        currentData.neutral +
+                                        currentData.positive
+                                    }
+                                    previousDayValue={
+                                        previousDayData
+                                            ? previousDayData.negative +
+                                              previousDayData.neutral +
+                                              previousDayData.positive
+                                            : null
+                                    }
+                                    timeframe={timeframe}
+                                />
+                                <StatisticCard
+                                    title="Negative"
+                                    value={currentData.negative}
+                                    previousDayValue={
+                                        previousDayData?.negative ?? null
+                                    }
+                                    color="text-red-500"
+                                    bgColor="bg-red-500/10"
+                                    timeframe={timeframe}
+                                />
+                                <StatisticCard
+                                    title="Neutral"
+                                    value={currentData.neutral}
+                                    previousDayValue={
+                                        previousDayData?.neutral ?? null
+                                    }
+                                    color="text-gray-500"
+                                    bgColor="bg-gray-500/10"
+                                    timeframe={timeframe}
+                                />
+                                <StatisticCard
+                                    title="Positive"
+                                    value={currentData.positive}
+                                    previousDayValue={
+                                        previousDayData?.positive ?? null
+                                    }
+                                    color="text-green-500"
+                                    bgColor="bg-green-500/10"
+                                    timeframe={timeframe}
+                                />
+                            </div>
 
-                    {/* Charts Section */}
-                    <div className="grid gap-6 lg:grid-cols-3">
-                        {/* Volume Distribution Chart */}
-                        <Card className="lg:col-span-2">
-                            <CardHeader>
-                                <CardTitle className="text-lg">
-                                    Volume Distribution
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[400px] w-full">
-                                    <ReactECharts
-                                        style={{
-                                            height: '100%',
-                                            width: '100%'
-                                        }}
-                                        option={getBarChartConfig(portalData, {
-                                            orientation: 'horizontal',
-                                            showLegend: true,
-                                            legendPosition: 'top',
-                                            colors: chartTheme.colors,
-                                            zoom: true,
-                                            barWidth: 20,
-                                            isDivergent: false
-                                        })}
-                                        notMerge={true}
-                                        lazyUpdate={true}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
+                            {/* Charts Section */}
+                            <div className="grid gap-6 lg:grid-cols-3">
+                                {/* Volume Distribution Chart */}
+                                <Card className="lg:col-span-2">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            Volume Distribution
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="h-[400px] w-full">
+                                            <ReactECharts
+                                                style={{
+                                                    height: '100%',
+                                                    width: '100%'
+                                                }}
+                                                option={getBarChartConfig(
+                                                    portalData,
+                                                    {
+                                                        orientation:
+                                                            'horizontal',
+                                                        showLegend: true,
+                                                        legendPosition: 'top',
+                                                        colors: chartTheme.colors,
+                                                        zoom: true,
+                                                        barWidth: 20,
+                                                        isDivergent: false
+                                                    }
+                                                )}
+                                                notMerge={true}
+                                                lazyUpdate={true}
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-                        {/* Overall Tone Chart */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">
-                                    Overall Tone Distribution
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[400px] w-full">
-                                    <ReactECharts
-                                        style={{
-                                            height: '100%',
-                                            width: '100%'
-                                        }}
-                                        option={getPieChartConfig(pieData, {
-                                            showLegend: true,
-                                            legendPosition: 'bottom',
-                                            colors: chartTheme.colors,
-                                            radius: ['40%', '70%']
-                                        })}
-                                        notMerge={true}
-                                        lazyUpdate={true}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                {/* Overall Tone Chart */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            Overall Tone Distribution
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="h-[400px] w-full">
+                                            <ReactECharts
+                                                style={{
+                                                    height: '100%',
+                                                    width: '100%'
+                                                }}
+                                                option={getPieChartConfig(
+                                                    pieData,
+                                                    {
+                                                        showLegend: true,
+                                                        legendPosition:
+                                                            'bottom',
+                                                        colors: chartTheme.colors,
+                                                        radius: ['40%', '70%']
+                                                    }
+                                                )}
+                                                notMerge={true}
+                                                lazyUpdate={true}
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-                        {/* Tone Distribution Chart */}
-                        <Card className="lg:col-span-3">
-                            <CardHeader>
-                                <CardTitle className="text-lg">
-                                    Tone Distribution by Portal
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[500px] w-full">
-                                    <ReactECharts
-                                        style={{
-                                            height: '100%',
-                                            width: '100%'
-                                        }}
-                                        option={getBarChartConfig(
-                                            toneDistributionData,
-                                            {
-                                                orientation: 'horizontal',
-                                                showLegend: true,
-                                                legendPosition: 'top',
-                                                colors: chartTheme.colors,
-                                                zoom: true,
-                                                barWidth: 25,
-                                                isDivergent: true
-                                            }
-                                        )}
-                                        notMerge={true}
-                                        lazyUpdate={true}
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="lg:col-span-3">
-                            <CardHeader>
-                                <CardTitle className="text-lg">
-                                    Trends for November 2024
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[500px] w-full">
-                                    <TrendsChart />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                    {/* Headlines Table */}
-                    <Suspense fallback={<div>Loading headlines...</div>}>
-                        <HeadlinesTable
-                            rangeData={filteredRangeData}
-                            selectedPortal={selectedPortal}
-                            onPortalChange={setSelectedPortal}
-                            availablePortals={availablePortals}
-                        />
-                    </Suspense>
+                                {/* Tone Distribution Chart */}
+                                <Card className="lg:col-span-3">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            Tone Distribution by Portal
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="h-[500px] w-full">
+                                            <ReactECharts
+                                                style={{
+                                                    height: '100%',
+                                                    width: '100%'
+                                                }}
+                                                option={getBarChartConfig(
+                                                    toneDistributionData,
+                                                    {
+                                                        orientation:
+                                                            'horizontal',
+                                                        showLegend: true,
+                                                        legendPosition: 'top',
+                                                        colors: chartTheme.colors,
+                                                        zoom: true,
+                                                        barWidth: 25,
+                                                        isDivergent: true
+                                                    }
+                                                )}
+                                                notMerge={true}
+                                                lazyUpdate={true}
+                                            />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                <Card className="lg:col-span-3">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">
+                                            Trends for November 2024
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="h-[500px] w-full">
+                                            <TrendsChart />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            {/* Headlines Table */}
+                            <Suspense
+                                fallback={<div>Loading headlines...</div>}
+                            >
+                                <HeadlinesTable
+                                    rangeData={filteredRangeData}
+                                    selectedPortal={selectedPortal}
+                                    onPortalChange={setSelectedPortal}
+                                    availablePortals={availablePortals}
+                                />
+                            </Suspense>
+                        </div>
+                    ) : (
+                        <Alert className="text-yellow-600">
+                            <AlertCircle className="h-4 w-4 text-yellow-600" />
+                            <AlertTitle>Sorry!!</AlertTitle>
+                            <AlertDescription>
+                                No articles found for this selected date. Please
+                                select a different date.{' '}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </div>
             </main>
+            <Footer />
         </div>
     )
 }
