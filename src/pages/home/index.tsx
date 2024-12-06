@@ -300,7 +300,7 @@ export default function HomePage() {
     return (
         <div className="flex min-h-screen flex-col bg-background">
             <header className="border-b bg-black">
-                <div className="container flex h-16 items-center justify-between px-4">
+                <div className=" flex h-16 items-center justify-between px-4">
                     <div className="flex items-center justify-center">
                         <img
                             src="/hindumisia.png"
