@@ -1,23 +1,27 @@
 //TODO:Error handling on no datas pending
 
-import ReactECharts from 'echarts-for-react';
-import { AlertCircle } from 'lucide-react';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import ReactECharts from 'echarts-for-react'
+import { AlertCircle } from 'lucide-react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 
-import { DateSelector } from '@/components/dashboard/DateSelector';
-import { StatisticCard } from '@/components/dashboard/StatisticCard';
-import TrendsChart from '@/components/internals/charts/areacharts';
-import { MonthlyPicker } from '@/components/internals/monthlypicker';
-import HeadlinesTable from '@/components/internals/tables/table';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DateSelector } from '@/components/dashboard/DateSelector'
+import { StatisticCard } from '@/components/dashboard/StatisticCard'
+import TrendsChart from '@/components/internals/charts/areacharts'
+import { MonthlyPicker } from '@/components/internals/monthlypicker'
+import HeadlinesTable from '@/components/internals/tables/table'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select';
-import { getBarChartConfig, getPieChartConfig } from '@/config/chartConfigs';
-import useUniversalStore from '@/store/useUniversalStore';
-import { PieData, PortalData } from '@/types/sentiment';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/components/ui/select'
+import { getBarChartConfig, getPieChartConfig } from '@/config/chartConfigs'
+import useUniversalStore from '@/store/useUniversalStore'
+import { PieData, PortalData } from '@/types/sentiment'
 
 export default function HomePage() {
     const [timeframe, setTimeframe] = useState('daily')

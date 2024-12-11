@@ -6,30 +6,30 @@ const quickLinks = [
     { title: 'Home', href: '/#' },
     {
         title: 'Anti-Hindu Hate',
-        href: 'https://hindumisia.ai/?page=anti_hindu_hate'
+        href: '/anti-hindu'
     },
     {
         title: 'Media References',
-        href: 'https://hindumisia.ai/?page=media_references'
+        href: '/media-refernace'
     },
-    { title: 'Benefits', href: 'https://hindumisia.ai/?page=benefits' }
+    { title: 'Benefits', href: '/benefits' }
 ]
 const company = [
     {
         title: 'About Hindumisia.ai',
-        href: 'https://hindumisia.ai/?page=about'
+        href: '/about'
     },
     {
         title: 'Partners',
-        href: 'https://hindumisia.ai/?page=partners'
+        href: '/partners'
     },
     {
         title: 'Ethics',
-        href: 'https://hindumisia.ai/?page=ethics'
+        href: '/ethics'
     },
     {
         title: 'Privacy',
-        href: 'https://hindumisia.ai/?page=privacy'
+        href: '/privacy'
     }
 ]
 const contacts = [
