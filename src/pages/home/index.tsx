@@ -1,28 +1,23 @@
 //TODO:Error handling on no datas pending
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
-import ReactECharts from 'echarts-for-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import ReactECharts from 'echarts-for-react';
+import { AlertCircle } from 'lucide-react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+
+import { DateSelector } from '@/components/dashboard/DateSelector';
+import { StatisticCard } from '@/components/dashboard/StatisticCard';
+import TrendsChart from '@/components/internals/charts/areacharts';
+import { MonthlyPicker } from '@/components/internals/monthlypicker';
+import HeadlinesTable from '@/components/internals/tables/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { StatisticCard } from '@/components/dashboard/StatisticCard'
-import { DateSelector } from '@/components/dashboard/DateSelector'
-import { getBarChartConfig, getPieChartConfig } from '@/config/chartConfigs'
-import { PortalData, PieData } from '@/types/sentiment'
-import HeadlinesTable from '@/components/internals/tables/table'
-import TrendsChart from '@/components/internals/charts/areacharts'
-import useUniversalStore from '@/store/useUniversalStore'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { MonthlyPicker } from '@/components/internals/monthlypicker'
-import Footer from '@/components/internals/footer'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
+import { getBarChartConfig, getPieChartConfig } from '@/config/chartConfigs';
+import useUniversalStore from '@/store/useUniversalStore';
+import { PieData, PortalData } from '@/types/sentiment';
 
 export default function HomePage() {
     const [timeframe, setTimeframe] = useState('daily')
@@ -298,26 +293,9 @@ export default function HomePage() {
     }, [filteredRangeData, csvData, timeframe, startDate])
 
     return (
-        <div className="flex min-h-screen flex-col bg-background">
-            <header className="border-b bg-black">
-                <div className=" flex h-16 items-center justify-between px-4">
-                    <div className="flex items-center justify-center">
-                        <img
-                            src="/hindumisia.png"
-                            className="object-contain w-auto h-20"
-                            alt="logo"
-                        />
-                        <h1 className="text-2xl font-bold text-orange-500">
-                            MEDIA SENTIMENT SCORECARD
-                        </h1>
-                    </div>
-
-                    <ThemeToggle />
-                </div>
-            </header>
-            <main className="flex-1 space-y-6 p-4 md:p-8">
+        <div className="flex flex-col min-h-screen bg-background">
+            <main className="flex-1 p-4 space-y-6 md:p-8">
                 <div className="grid gap-6">
-                    {/* Control Cards */}
                     <div className="grid gap-4 md:grid-cols-2">
                         {/* Time Range Selector */}
                         <Card>
@@ -349,7 +327,7 @@ export default function HomePage() {
                                 </div>
                                 {timeframe === 'monthly' && (
                                     <div>
-                                        <div className="text-sm font-medium mb-2">
+                                        <div className="mb-2 text-sm font-medium">
                                             Select Month
                                         </div>
                                         <MonthlyPicker
@@ -606,7 +584,7 @@ export default function HomePage() {
                         </div>
                     ) : (
                         <Alert className="text-yellow-600">
-                            <AlertCircle className="h-4 w-4 text-yellow-600" />
+                            <AlertCircle className="w-4 h-4 text-yellow-600" />
                             <AlertTitle>Sorry!!</AlertTitle>
                             <AlertDescription>
                                 No articles found for this selected date. Please
@@ -616,7 +594,6 @@ export default function HomePage() {
                     )}
                 </div>
             </main>
-            <Footer />
         </div>
     )
 }
