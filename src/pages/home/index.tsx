@@ -62,6 +62,8 @@ export default function HomePage() {
 
     useEffect(() => {
         const today = new Date()
+        const yesterday = new Date(today)
+        yesterday.setDate(today.getDate() - 1)
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
         const endOfMonth = new Date(
             today.getFullYear(),
@@ -71,7 +73,7 @@ export default function HomePage() {
 
         switch (timeframe) {
             case 'daily':
-                setStartDate(today)
+                setStartDate(yesterday)
                 setEndDate(today)
                 break
             case 'monthly':
