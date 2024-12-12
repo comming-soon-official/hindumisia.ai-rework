@@ -575,18 +575,28 @@ export default function HomePage() {
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Card className="lg:col-span-3">
-                                    <CardHeader>
-                                        <CardTitle className="text-lg">
-                                            Trends for November 2024
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="h-[500px] w-full">
-                                            <TrendsChart />
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                {timeframe !== 'daily' && (
+                                    <Card className="lg:col-span-3">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg">
+                                                Trends for{' '}
+                                                {timeframe === 'monthly'
+                                                    ? new Date(
+                                                          startDate
+                                                      ).toLocaleString(
+                                                          'default',
+                                                          { month: 'long' }
+                                                      )
+                                                    : 'Selected Range'}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="h-[500px] w-full">
+                                                <TrendsChart />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </div>
                             {/* Headlines Table */}
                             <Suspense

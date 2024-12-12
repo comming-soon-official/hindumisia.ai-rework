@@ -51,7 +51,7 @@ const HeadlinesTable = ({
     const [searchQuery, setSearchQuery] = useState('')
     const [filter, setFilter] = useState('All')
     const [currentPage, setCurrentPage] = useState(1)
-    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [itemsPerPage, setItemsPerPage] = useState(25)
     const [goToPage, setGoToPage] = useState('')
 
     const filteredHeadlines = useMemo(() => {
@@ -87,8 +87,10 @@ const HeadlinesTable = ({
                 return 'destructive'
             case 'positive':
                 return 'success'
-            default:
+            case 'neutral':
                 return 'secondary'
+            default:
+                return 'outline'
         }
     }, [])
 
@@ -141,9 +143,9 @@ const HeadlinesTable = ({
                 <CardTitle className="text-2xl font-bold">Headlines</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
+                <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute w-4 h-4 left-3 top-3 text-muted-foreground" />
                         <Input
                             placeholder="Search headlines, authors or portals..."
                             value={searchQuery}
@@ -181,7 +183,7 @@ const HeadlinesTable = ({
                     </Select>
                 </div>
 
-                <div className="rounded-md border">
+                <div className="border rounded-md">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -221,7 +223,7 @@ const HeadlinesTable = ({
                                             href={item.urlLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
+                                            className="text-blue-600 text-primary hover:underline"
                                         >
                                             Read More
                                         </a>
@@ -236,6 +238,7 @@ const HeadlinesTable = ({
                                                     | 'secondary'
                                                     | 'default'
                                                     | 'outline'
+                                                    | 'success'
                                             }
                                         >
                                             {item.sentiment}
@@ -248,7 +251,7 @@ const HeadlinesTable = ({
                 </div>
 
                 {totalPages > 1 && (
-                    <Pagination className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-around">
+                    <Pagination className="flex flex-col gap-4 mt-4 sm:flex-row sm:items-center sm:justify-around">
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
@@ -300,7 +303,7 @@ const HeadlinesTable = ({
                             </PaginationItem>
                         </PaginationContent>
                         <div className="flex items-center gap-4">
-                            <div className=" flex  items-center gap-2">
+                            <div className="flex items-center gap-2 ">
                                 <span className="text-sm text-muted-foreground">
                                     Items per page:
                                 </span>
@@ -354,7 +357,7 @@ const HeadlinesTable = ({
                                 />
                                 <button
                                     type="submit"
-                                    className="rounded-md bg-primary px-2 py-1 text-sm text-primary-foreground"
+                                    className="px-2 py-1 text-sm rounded-md bg-primary text-primary-foreground"
                                 >
                                     Go
                                 </button>
