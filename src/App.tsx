@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import Footer from './components/internals/footer'
@@ -22,7 +23,14 @@ const App = () => {
             <BrowserRouter>
                 <Header />
                 <div>
-                    {!loading && (
+                    {loading ? (
+                        <div className="flex items-center justify-center h-screen">
+                            <Loader2
+                                className="text-orange-500 animate-spin"
+                                size={'40'}
+                            />
+                        </div>
+                    ) : (
                         <Routes>
                             <Route path="/" element={<HomePage />} />
                             <Route path="/about" element={<AboutPage />} />
