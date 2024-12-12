@@ -57,54 +57,57 @@ export default function HomePage() {
         colors: ['hsl(0, 100%, 50%)', 'hsl(0, 0%, 70%)', 'hsl(120, 100%, 35%)']
     }
     useEffect(() => {
-        const today = new Date()
-
-        if (timeframe === 'daily') {
-            setStartDate(today)
-            setEndDate(today)
-        } else if (timeframe === 'monthly') {
-            setStartDate(new Date(today.getFullYear(), today.getMonth(), 1))
-            setEndDate(new Date(today.getFullYear(), today.getMonth() + 1, 0))
-        }
-        // For "range", we don't auto-update dates to let user pick their own range
-    }, [timeframe])
-
-    useEffect(() => {
         write({ rangeFromDate: startDate, rangeToDate: endDate })
     }, [startDate, endDate, write])
 
+    useEffect(() => {
+        const today = new Date()
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+        const endOfMonth = new Date(
+            today.getFullYear(),
+            today.getMonth() + 1,
+            0
+        )
+
+        switch (timeframe) {
+            case 'daily':
+                setStartDate(today)
+                setEndDate(today)
+                break
+            case 'monthly':
+                setStartDate(startOfMonth)
+                setEndDate(endOfMonth)
+                break
+            // Range timeframe handled by user selection
+        }
+    }, [timeframe])
+
     const rangeData = useMemo(() => {
-        const data = csvData.filter((data) => {
-            // Parse date in DD-MM-YYYY format
-            if (!data.publishedDate) {
-                console.warn('Missing publishedDate')
-                return false
-            }
+        return csvData.filter((data) => {
+            if (!data.publishedDate) return false
+
             const [day, month, year] = data.publishedDate.split('-').map(Number)
-            const publishedDate = new Date(year, month - 1, day) // month is 0-indexed
+            const publishedDate = new Date(year, month - 1, day)
 
-            // Check if date is valid
-            if (isNaN(publishedDate.getTime())) {
-                console.warn(`Invalid date found: ${data.publishedDate}`)
-                return false
-            }
+            if (isNaN(publishedDate.getTime())) return false
 
-            // Subtract 1 day from publishedDate
-            publishedDate.setDate(publishedDate.getDate() - 1)
-            // Set time to midnight for consistent date comparison
             publishedDate.setHours(0, 0, 0, 0)
 
             const start = new Date(startDate)
             start.setHours(0, 0, 0, 0)
-            const end = new Date(endDate)
-            end.setHours(23, 59, 59, 999)
 
+            const end = new Date(endDate)
+
+            if (timeframe === 'daily') {
+                const nextDay = new Date(start)
+                nextDay.setDate(start.getDate() + 1)
+                return publishedDate >= start && publishedDate < nextDay
+            }
+
+            end.setHours(23, 59, 59, 999)
             return publishedDate >= start && publishedDate <= end
         })
-        console.log(data)
-
-        return data
-    }, [csvData, startDate, endDate])
+    }, [csvData, startDate, endDate, timeframe])
 
     // Get unique portals from rangeData
     const availablePortals = useMemo(() => {
@@ -114,7 +117,9 @@ export default function HomePage() {
 
     // Filter rangeData based on selected portal
     const filteredRangeData = useMemo(() => {
+        console.log(rangeData)
         if (selectedPortal === 'all') return rangeData
+
         return rangeData.filter((item) => item.portal === selectedPortal)
     }, [rangeData, selectedPortal])
 
@@ -132,7 +137,7 @@ export default function HomePage() {
                 positive: 0
             }
 
-            switch (item.sentiment.toLowerCase()) {
+            switch (item.sentiment?.toLowerCase()) {
                 case 'negative':
                     current.negative++
                     break
@@ -175,7 +180,7 @@ export default function HomePage() {
                 positive: 0
             }
 
-            switch (item.sentiment.toLowerCase()) {
+            switch (item.sentiment?.toLowerCase()) {
                 case 'negative':
                     current.negative++
                     break
@@ -213,7 +218,7 @@ export default function HomePage() {
     const pieData: PieData[] = useMemo(() => {
         const totals = filteredRangeData.reduce(
             (acc, item) => {
-                switch (item.sentiment.toLowerCase()) {
+                switch (item.sentiment?.toLowerCase()) {
                     case 'negative':
                         acc.negative++
                         break
@@ -239,10 +244,10 @@ export default function HomePage() {
     }, [filteredRangeData])
 
     // Calculate current and previous day data
-    const { currentData, previousDayData } = useMemo(() => {
+    const currentAndPreviousData = useMemo(() => {
         const current = filteredRangeData.reduce(
             (acc, item) => {
-                switch (item.sentiment.toLowerCase()) {
+                switch (item.sentiment?.toLowerCase()) {
                     case 'negative':
                         acc.negative++
                         break
@@ -261,6 +266,8 @@ export default function HomePage() {
         let previous = null
 
         if (timeframe === 'daily') {
+            if (csvData.length === 0)
+                return { currentData: current, previousDayData: null }
             // Calculate previous day's data
             const currentDate = new Date(startDate)
             const previousDate = new Date(currentDate)
@@ -275,7 +282,7 @@ export default function HomePage() {
                         itemDate.getMonth() === previousDate.getMonth() &&
                         itemDate.getDate() === previousDate.getDate()
                     ) {
-                        switch (item.sentiment.toLowerCase()) {
+                        switch (item.sentiment?.toLowerCase()) {
                             case 'negative':
                                 acc.negative++
                                 break
@@ -296,6 +303,11 @@ export default function HomePage() {
         return { currentData: current, previousDayData: previous }
     }, [filteredRangeData, csvData, timeframe, startDate])
 
+    const {
+        currentData = { negative: 0, neutral: 0, positive: 0 },
+        previousDayData
+    } = currentAndPreviousData || {}
+
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <main className="flex-1 p-4 space-y-6 md:p-8">
@@ -308,7 +320,7 @@ export default function HomePage() {
                                     Select Time Range
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
+                            <CardContent className="flex flex-wrap items-end gap-10">
                                 <div className="flex flex-wrap gap-4">
                                     {['daily', 'monthly', 'range'].map(
                                         (option) => (

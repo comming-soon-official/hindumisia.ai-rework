@@ -69,7 +69,7 @@ const TrendsChart = () => {
                     total: 0
                 }
 
-                switch (item.sentiment.toLowerCase()) {
+                switch (item.sentiment?.toLowerCase()) {
                     case 'negative':
                         current.negative++
                         break
