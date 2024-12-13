@@ -85,8 +85,12 @@ export default function HomePage() {
     }, [timeframe])
 
     const rangeData = useMemo(() => {
-        return csvData.filter((data) => {
-            if (!data.publishedDate) return false
+        const data = csvData.filter((data) => {
+            if (!data.publishedDate) {
+                console.log('Missing PublishedDate', data)
+
+                return false
+            }
 
             const [day, month, year] = data.publishedDate.split('-').map(Number)
             const publishedDate = new Date(year, month - 1, day)
@@ -109,6 +113,9 @@ export default function HomePage() {
             end.setHours(23, 59, 59, 999)
             return publishedDate >= start && publishedDate <= end
         })
+        console.log(data)
+
+        return data
     }, [csvData, startDate, endDate, timeframe])
 
     // Get unique portals from rangeData
@@ -249,16 +256,37 @@ export default function HomePage() {
     const currentAndPreviousData = useMemo(() => {
         const current = filteredRangeData.reduce(
             (acc, item) => {
-                switch (item.sentiment?.toLowerCase()) {
-                    case 'negative':
-                        acc.negative++
-                        break
-                    case 'neutral':
-                        acc.neutral++
-                        break
-                    case 'positive':
-                        acc.positive++
-                        break
+                if (!item.publishedDate) {
+                    return acc
+                }
+
+                const [day, month, year] = item.publishedDate
+                    .split('-')
+                    .map(Number)
+                const publishedDate = new Date(year, month - 1, day)
+
+                if (isNaN(publishedDate.getTime())) return acc
+
+                publishedDate.setHours(0, 0, 0, 0)
+
+                const start = new Date(startDate)
+                start.setHours(0, 0, 0, 0)
+
+                const end = new Date(endDate)
+                end.setHours(23, 59, 59, 999)
+
+                if (publishedDate >= start && publishedDate <= end) {
+                    switch (item.sentiment?.toLowerCase()) {
+                        case 'negative':
+                            acc.negative++
+                            break
+                        case 'neutral':
+                            acc.neutral++
+                            break
+                        case 'positive':
+                            acc.positive++
+                            break
+                    }
                 }
                 return acc
             },
@@ -270,20 +298,26 @@ export default function HomePage() {
         if (timeframe === 'daily') {
             if (csvData.length === 0)
                 return { currentData: current, previousDayData: null }
-            // Calculate previous day's data
+
             const currentDate = new Date(startDate)
             const previousDate = new Date(currentDate)
             previousDate.setDate(previousDate.getDate() - 1)
 
             previous = csvData.reduce(
                 (acc, item) => {
-                    const itemDate = new Date(item.publishedDate)
-                    // Compare only dates, not times
-                    if (
-                        itemDate.getFullYear() === previousDate.getFullYear() &&
-                        itemDate.getMonth() === previousDate.getMonth() &&
-                        itemDate.getDate() === previousDate.getDate()
-                    ) {
+                    if (!item.publishedDate) return acc
+
+                    const [day, month, year] = item.publishedDate
+                        .split('-')
+                        .map(Number)
+                    const publishedDate = new Date(year, month - 1, day)
+
+                    if (isNaN(publishedDate.getTime())) return acc
+
+                    publishedDate.setHours(0, 0, 0, 0)
+                    previousDate.setHours(0, 0, 0, 0)
+
+                    if (publishedDate.getTime() === previousDate.getTime()) {
                         switch (item.sentiment?.toLowerCase()) {
                             case 'negative':
                                 acc.negative++
@@ -303,7 +337,7 @@ export default function HomePage() {
         }
 
         return { currentData: current, previousDayData: previous }
-    }, [filteredRangeData, csvData, timeframe, startDate])
+    }, [filteredRangeData, csvData, timeframe, startDate, endDate])
 
     const {
         currentData = { negative: 0, neutral: 0, positive: 0 },
