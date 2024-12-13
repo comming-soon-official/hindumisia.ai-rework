@@ -2,7 +2,7 @@
 
 import ReactECharts from 'echarts-for-react'
 import { AlertCircle } from 'lucide-react'
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { DateSelector } from '@/components/dashboard/DateSelector'
 import { StatisticCard } from '@/components/dashboard/StatisticCard'
@@ -347,7 +347,7 @@ export default function HomePage() {
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <main className="flex-1 p-4 space-y-6 md:p-8">
-                <div className="grid gap-6">
+                <div className="grid ">
                     <div className="grid gap-4 md:grid-cols-2">
                         {/* Time Range Selector */}
                         <Card>
@@ -460,7 +460,7 @@ export default function HomePage() {
                     {rangeData.length != 0 ? (
                         <div>
                             {/* Statistics Cards */}
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="grid gap-4 my-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <StatisticCard
                                     title="Total Articles"
                                     value={
@@ -633,16 +633,18 @@ export default function HomePage() {
                                 )}
                             </div>
                             {/* Headlines Table */}
-                            <Suspense
+                            {/* <Suspense
                                 fallback={<div>Loading headlines...</div>}
-                            >
+                            > */}
+                            <div className="my-4">
                                 <HeadlinesTable
                                     rangeData={filteredRangeData}
                                     selectedPortal={selectedPortal}
                                     onPortalChange={setSelectedPortal}
                                     availablePortals={availablePortals}
                                 />
-                            </Suspense>
+                            </div>
+                            {/* </Suspense> */}
                         </div>
                     ) : (
                         <Alert className="text-yellow-600">
